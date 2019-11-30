@@ -14,7 +14,8 @@ import OriginHint from './OriginHint'
 import {
   openFolder,
   getOpenedFolderId,
-  getVisibleFiles
+  getVisibleFiles,
+  getFileDownloadUrl
 } from 'drive/web/modules/navigation/duck'
 import styles from './picker.styl'
 
@@ -48,6 +49,15 @@ class Picker extends Component {
     this.navigateTo(path[path.length - 2])
   }
 
+  openFile = async file => {
+    try {
+      const url = await getFileDownloadUrl(file)
+      this.props.service.terminate({ id: file, url })
+    } catch (error) {
+      this.props.service.throw(error)
+    }
+  }
+
   componentDidMount() {
     const root = document.getElementById('main')
     const data = root.dataset
@@ -75,7 +85,7 @@ class Picker extends Component {
     const { hint, icon } = service.getData()
     const showBackButton = path.length > 1 && isMobile
 
-    const folders = files.filter(file => file.type === 'directory')
+    const folders = files
 
     return (
       <div className={styles['wrapper']}>
@@ -105,6 +115,7 @@ class Picker extends Component {
           selectionModeActive={false}
           actionMenuActive={false}
           onFolderOpen={id => this.navigateTo(files.find(f => f.id === id))}
+          onFileOpen={file => this.openFile(file.id)}
         />
         <div className={styles['button-area']}>
           <Button theme="secondary" onClick={this.cancelIntent}>
